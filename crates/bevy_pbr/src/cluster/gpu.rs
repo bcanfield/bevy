@@ -1437,6 +1437,12 @@ fn prepare_cluster_dummy_textures(
     mut texture_cache: ResMut<TextureCache>,
 ) {
     for (view_entity, view_cluster_config) in &views_query {
+        // A view with no clusters (`ClusterConfig::None`, or a zero-sized viewport) has nothing
+        // to rasterize, and wgpu rejects a zero-sized texture. Without the dummy texture,
+        // `cluster_on_gpu` skips the view.
+        if view_cluster_config.dimensions.min_element() == 0 {
+            continue;
+        }
         let dummy_texture = texture_cache.get(
             &render_device,
             TextureDescriptor {
